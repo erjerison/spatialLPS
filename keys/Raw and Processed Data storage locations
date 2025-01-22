@@ -1,0 +1,21 @@
+Raw and Processed Data storage locations:
+Raw imaging stacks, for all samples in Sample_Key.txt (Additionally, 2 DapB negative control samples were used in analysis; their raw data is stored in the same location):
+
+UChicago RCC Midway3
+/project/ejerison/ejerison/Stanford_transfer/zfish_lps_in_situ/raw_image_inputs/[sample-name]
+(Files in .czi format)
+
+Preprocessed (registered and Max Z projected) files are in:
+/project/ejerison/ejerison/Stanford_transfer/zfish_lps_in_situ/registration_and_processing/
+
+Max Z projected and .pdf checks on registration are also in personal dropbox (along with scripts, subsequent processed outputs)
+
+Sequencing data used in the initial 10X-based RNAseq screen on LPS vs. Control fish is located in:
+
+Raw data:
+/project/ejerison/ejerison/Stanford_transfer/zfish_lps_analysis/single_cell_analysis/seq_11242021
+
+Output of Cell Ranger (alignment, counts tables):
+/project/ejerison/ejerison/Stanford_transfer/zfish_lps_analysis/single_cell_analysis/output_11252021
+
+Counts tables for LPS and Control and subsequent analysis in Dropbox

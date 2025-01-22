@@ -1,0 +1,7 @@
+Treatment Group	Color
+Control_E3	C4
+LPS20ugml_10hrs	C5
+LPS25ugml_10hrs	C0
+LPS27ugml_10hrs	C1
+LPS30ugml_4hrs	C2
+LPS30ugml_10hrs	C3

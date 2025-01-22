@@ -1,0 +1,125 @@
+
+```{r}
+
+```
+
+
+```{r}
+library(reticulate)
+use_condaenv("/opt/miniconda3/envs/singlecell")
+```
+
+```{python}
+import scanpy as sc
+
+sc.settings.verbosity = 3             # verbosity: errors (0), warnings (1), info (2), hints (3)
+sc.logging.print_header()
+sc.settings.set_figure_params(dpi=80, facecolor='white')
+```
+Data paths and other variable definitions:
+```{python}
+data_path = '/Users/ejerison/Dropbox/zfish_lps_phases/single_cell/seq_11242021_output/Control/'
+input_path = data_path + 'filtered_feature_bc_matrix/'
+results_file = data_path + '/Control_Decont.loom'
+```
+Import and cache the original .mtx file. This is the number of umis assigned to each gene for each cell by cellranger.
+Store the actual raw counts as a layer with name 'raw' in the adata object.
+```{python}
+adata = sc.read_10x_mtx(
+    input_path,  # the directory with the `.mtx` file
+    var_names='gene_symbols',                # use gene symbols for the variable names (variables-axis index)
+    cache=True)                              # write a cache file for faster subsequent reading
+
+adata.var_names_make_unique()
+```
+
+
+```{python}
+adata.layers['raw'] = adata.X.copy()
+```
+Normalize to counts per 10^4, and transform to log(1+X). Cluster using scanpy's implementation of Leiden.
+Note that we are not yet filtering on any quality metric (like fraction of mitochondrial reads)
+```{python}
+sc.pp.normalize_total(adata, target_sum=1e4)
+sc.pp.log1p(adata)
+sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
+sc.pl.highly_variable_genes(adata)
+print(adata.layers['raw'])
+```
+```{python}
+sc.tl.pca(adata, svd_solver='arpack')
+sc.pp.neighbors(adata, n_neighbors=10, n_pcs=50)
+sc.tl.umap(adata)
+sc.tl.leiden(adata)
+
+```
+```{python}
+leiden_clusters = adata.obs['leiden']
+cl = leiden_clusters.astype('str')
+```
+
+
+```{python}
+print(adata.layers['raw'])
+```
+
+
+```{python}
+sc.pl.umap(adata, color=['leiden'])
+```
+Pass the raw counts matrix and the cluster assignments to DecontX and have it estimate the contamination fraction and the 'decontaminated' counts table
+
+```{python}
+cluster_labels = cl.values
+```
+```{r}
+library(celda)
+library(Matrix)
+rclust <- as.vector(py$cluster_labels)
+
+```
+```{r}
+Control_mtx<-Seurat::ReadMtx(mtx=paste(py$input_path,'/matrix.mtx.gz',sep=""),cells=paste(py$input_path,'/barcodes.tsv.gz',sep=""),features=paste(py$input_path,'/features.tsv.gz',sep=""))
+
+```
+
+Run decontX
+
+```{r}
+decontX_output <- decontX(x=Control_mtx,z=rclust)
+```
+```{r}
+decontX_counts <- decontX_output$decontXcounts
+decontX_scores <- decontX_output$contamination
+```
+
+
+
+Reset adata.X to the raw count matrix and run scrublet
+```{python}
+adata.X = adata.layers['raw'].copy()
+sc.external.pp.scrublet(adata)
+```
+Pull the sparse matrix of counts, as well as the scores, back into python and add them to the adata object
+
+Save adata as a .loom object.
+The important parts of this are: adata.layers['raw'] is the raw counts. adata.layers['decontX_counts'] are the corrected counts estimated by decontX. adata.obs['doublet_scores'] are the doublet scores estimated by scrublet. adata.obs['decontX_scores'] are the fraction contamination estimated by decontX.
+
+```{python}
+import pandas as pd
+
+adata.layers['decontX_counts'] = r.decontX_counts.transpose()
+cont_vec = r.decontX_scores
+cell_index = adata.obs_names
+cont_df = pd.DataFrame(cont_vec,index=cell_index)
+adata.obs['decontX_scores'] = cont_df
+print(adata.obs)
+```
+
+```{python}
+output_file = data_path + 'Control_counts_cont_scores.h5ad.gz'
+adata.write(output_file)
+```
+
+
+

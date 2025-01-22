@@ -1,0 +1,7 @@
+Data Inputs for Figures
+[sample-key]-raw_counts.npy	Numpy array of spots/cell for each gene. Table with N cells x g genes.
+[sample-key]-intensities.npy	Numpy array of intensities/cell for each gene. Table with N cells x g genes.
+[sample-key]-segmentation.npy	Numpy array representing an image of the spatial cell segmentation. This is a label image; each number in the table represents a pixel, with the value being the label of the segmented region (cell) that the pixel is assigned to. Note that in this representation the background is assigned to label 0, and region labels run from 1 to N for each sample.
+[sample-key]-xy_centroids.npy	Numpy array of segmented cell centroid locations in 2D. Units are in pixels. Table with N cells x 2 coordinates
+[sample-key]-st_centroids.npy	Numpy array of segmented cell centroid locations in the Coons mapping (interpolation to transform to a rectangular grid). Table with N cells x 2 coordinates
+[sample-key]-graph_eigenvectors-svd.npy	Numpy array of eigenvectors computed from the normalized adjacency matrix of the tail graph. N x N.

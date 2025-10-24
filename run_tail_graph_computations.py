@@ -16,4 +16,4 @@ for sample in sample_list:
 
 	print('Calculating eigenvectors')
 
-	tail_graph_functions.calculate_save_eigenvectors(Anorm,paths_filenames.table_path,sample)
+	tail_graph_functions.calculate_save_eigenvectors2(Anorm,paths_filenames.table_path,sample)
